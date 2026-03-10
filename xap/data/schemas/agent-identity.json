@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xap.agentralabs.tech/schemas/agent-identity.json",
+  "title": "AgentIdentity",
+  "description": "XAP v0.2 — The permanent economic identity and capability passport for an autonomous agent. Cryptographically anchored. Append-only reputation. Integer minor units for all monetary values. Basis points for all rates.",
+  "type": "object",
+  "required": [
+    "agent_id",
+    "public_key",
+    "key_version",
+    "key_status",
+    "capabilities",
+    "reputation",
+    "xap_version",
+    "status",
+    "registered_at",
+    "last_active_at",
+    "signature"
+  ],
+  "dependentRequired": {
+    "team_id": ["org_id"]
+  },
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "pattern": "^agent_[a-f0-9]{8}$",
+      "description": "Globally unique agent identifier. Assigned at registration. Immutable."
+    },
+    "org_id": {
+      "type": "string",
+      "pattern": "^org_[a-f0-9]{8}$",
+      "description": "Organization identifier. If present, agent belongs to an org. Policies cascade: org → team → agent."
+    },
+    "team_id": {
+      "type": "string",
+      "pattern": "^team_[a-f0-9]{8}$",
+      "description": "Team identifier. If present, org_id must also be present. Agent belongs to a team within the org."
+    },
+    "public_key": {
+      "type": "string",
+      "description": "Ed25519 public key (base64 encoded). Current signing key for this agent."
+    },
+    "key_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing key version. Starts at 1."
+    },
+    "key_status": {
+      "type": "string",
+      "enum": ["active", "rotated", "revoked"],
+      "description": "Current key state."
+    },
+    "previous_key_hash": {
+      "type": "string",
+      "description": "SHA-256 hex hash of previous public key. Present after key rotation."
+    },
+    "recovery_key_hash": {
+      "type": "string",
+      "description": "SHA-256 hex hash of recovery key. For compromise scenarios."
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Declared capabilities with per-capability pricing and SLA. Machine-readable.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "pricing", "sla"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Capability name (e.g., 'text_summarization')."
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "Capability version in semver format."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Human/LLM-readable description of what this capability does."
+          },
+          "pricing": {
+            "type": "object",
+            "required": ["model", "amount_minor_units", "currency", "per"],
+            "description": "How this capability is priced. All amounts in integer minor units.",
+            "properties": {
+              "model": {
+                "type": "string",
+                "enum": ["fixed", "dynamic", "auction", "outcome_based"],
+                "description": "Pricing model."
+              },
+              "amount_minor_units": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Price in minor currency units (e.g., cents for USD). $5.00 = 500."
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3,10}$",
+                "description": "ISO 4217 code or token identifier (e.g., 'USD', 'USDC', 'XAP_CREDIT')."
+              },
+              "per": {
+                "type": "string",
+                "enum": ["request", "token", "second", "output_unit"],
+                "description": "What the price is per."
+              },
+              "conditions": {
+                "type": "array",
+                "description": "Conditional pricing rules.",
+                "items": {
+                  "type": "object",
+                  "required": ["metric", "threshold", "modifier_bps"],
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "description": "What is measured (e.g., 'latency_ms')."
+                    },
+                    "threshold": {
+                      "type": "integer",
+                      "description": "The threshold value."
+                    },
+                    "modifier_bps": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000,
+                      "description": "Price modifier in basis points (10000 = full price)."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sla": {
+            "type": "object",
+            "required": ["max_latency_ms", "availability_bps"],
+            "description": "Performance guarantees for this capability.",
+            "properties": {
+              "max_latency_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Maximum response time in milliseconds."
+              },
+              "availability_bps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "description": "Uptime guarantee in basis points (9950 = 99.50%)."
+              },
+              "min_quality_score_bps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "description": "Minimum quality threshold in basis points (8500 = 85.00%)."
+              }
+            }
+          },
+          "input_spec": {
+            "type": "object",
+            "description": "Expected input format."
+          },
+          "output_spec": {
+            "type": "object",
+            "description": "Expected output format."
+          }
+        }
+      }
+    },
+    "reputation": {
+      "type": "object",
+      "description": "Append-only performance history. Never deleted. Every outcome permanently attached.",
+      "required": ["total_settlements", "success_rate_bps", "disputes", "dispute_resolution_rate_bps", "last_updated"],
+      "properties": {
+        "total_settlements": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lifetime settled transactions."
+        },
+        "success_rate_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Success rate in basis points (9700 = 97.00%)."
+        },
+        "avg_quality_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Average quality score in basis points."
+        },
+        "disputes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total disputes filed."
+        },
+        "dispute_resolution_rate_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Disputes resolved successfully in basis points."
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last reputation update timestamp."
+        }
+      }
+    },
+    "external_identities": {
+      "type": "array",
+      "description": "Bridges to W3C VC, ERC-8004, DIDs. Extensibility for external identity standards.",
+      "items": {
+        "type": "object",
+        "required": ["standard", "identifier"],
+        "properties": {
+          "standard": {
+            "type": "string",
+            "enum": ["w3c_vc", "erc_8004", "did", "other"],
+            "description": "Identity standard."
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The external identifier."
+          },
+          "proof": {
+            "type": "string",
+            "description": "Attestation linking XAP identity to external."
+          }
+        }
+      }
+    },
+    "risk_profile": {
+      "type": "object",
+      "description": "Declared risk tier and compliance flags.",
+      "properties": {
+        "risk_tier": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "unrated"],
+          "description": "Declared risk level."
+        },
+        "compliance_flags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Compliance certifications held."
+        },
+        "jurisdiction": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "Primary operating jurisdiction (ISO 3166-1 alpha-2)."
+        }
+      }
+    },
+    "xap_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "XAP protocol version this identity conforms to."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "suspended", "frozen"],
+      "description": "Current agent status."
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of first registration. Immutable."
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last economic activity."
+    },
+    "portable_proof": {
+      "type": "string",
+      "description": "Ed25519 signed attestation for identity portability."
+    },
+    "export_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the identity was last exported."
+    },
+    "source_implementation": {
+      "type": "string",
+      "description": "Which XAP implementation this identity originated from."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Ed25519 signature over the canonical JSON of this identity object (excluding this field). Self-signed identity attestation."
+    }
+  },
+  "examples": [
+    {
+      "agent_id": "agent_7f3a9b2c",
+      "public_key": "ed25519:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=",
+      "key_version": 1,
+      "key_status": "active",
+      "capabilities": [
+        {
+          "name": "text_summarization",
+          "version": "1.0.0",
+          "description": "Summarizes plaintext documents into concise outputs",
+          "pricing": {
+            "model": "fixed",
+            "amount_minor_units": 300,
+            "currency": "USD",
+            "per": "request"
+          },
+          "sla": {
+            "max_latency_ms": 3000,
+            "availability_bps": 9900,
+            "min_quality_score_bps": 8500
+          }
+        }
+      ],
+      "reputation": {
+        "total_settlements": 0,
+        "success_rate_bps": 0,
+        "disputes": 0,
+        "dispute_resolution_rate_bps": 0,
+        "last_updated": "2026-03-09T12:00:00Z"
+      },
+      "xap_version": "0.2.0",
+      "status": "active",
+      "registered_at": "2026-03-09T12:00:00Z",
+      "last_active_at": "2026-03-09T12:00:00Z",
+      "signature": "ed25519:c2lnbmF0dXJlX2V4YW1wbGVfYmFzZTY0X2VuY29kZWQ="
+    }
+  ]
+}

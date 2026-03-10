@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xap-sdk"
+version = "0.2.0"
+description = "XAP Protocol SDK — Settlement objects for autonomous agent commerce"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "jsonschema>=4.20",
+    "pynacl>=1.5",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.23",
+]
+
+[tool.setuptools.packages.find]
+include = ["xap*"]
+
+[tool.setuptools.package-data]
+"xap.data.schemas" = ["*.json"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

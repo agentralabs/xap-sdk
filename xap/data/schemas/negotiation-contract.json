@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xap.agentralabs.tech/schemas/v0.2/negotiation-contract.json",
+  "title": "NegotiationContract",
+  "description": "XAP v0.2 — Bilateral negotiation between two agents. Four states: OFFER, COUNTER, ACCEPT, REJECT. Every message is signed and chained via previous_state_hash.",
+  "type": "object",
+  "required": [
+    "negotiation_id",
+    "state",
+    "round_number",
+    "from_agent",
+    "to_agent",
+    "task",
+    "pricing",
+    "sla",
+    "expires_at",
+    "xap_version",
+    "created_at",
+    "signature"
+  ],
+  "properties": {
+    "negotiation_id": {
+      "type": "string",
+      "pattern": "^neg_[a-f0-9]{8}$",
+      "description": "Unique negotiation identifier. Immutable once created."
+    },
+    "state": {
+      "type": "string",
+      "enum": ["OFFER", "COUNTER", "ACCEPT", "REJECT"],
+      "description": "Current negotiation state. Exactly four states. ACCEPT and REJECT are terminal."
+    },
+    "round_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which round this is. OFFER is round 1. Each COUNTER increments."
+    },
+    "max_rounds": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 20,
+      "description": "Maximum COUNTER rounds before auto-reject."
+    },
+    "from_agent": {
+      "type": "string",
+      "pattern": "^agent_[a-f0-9]{8}$",
+      "description": "Agent sending this message."
+    },
+    "to_agent": {
+      "type": "string",
+      "pattern": "^agent_[a-f0-9]{8}$",
+      "description": "Agent receiving this message."
+    },
+    "task": {
+      "type": "object",
+      "description": "What work is being negotiated.",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Task capability name. Must match a capability in the payee's AgentIdentity."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+",
+          "description": "Required capability version (semver)."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Human/LLM-readable task description."
+        },
+        "input_spec": {
+          "$ref": "#/$defs/IOSpec"
+        },
+        "output_spec": {
+          "$ref": "#/$defs/IOSpec"
+        },
+        "constraints": {
+          "type": "object",
+          "description": "Additional task constraints."
+        }
+      },
+      "additionalProperties": false
+    },
+    "pricing": {
+      "type": "object",
+      "description": "Proposed price and conditions. All amounts in integer minor units.",
+      "required": ["amount_minor_units", "currency", "model", "per"],
+      "properties": {
+        "amount_minor_units": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Base price in minor currency units (e.g., cents for USD)."
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3,6}$",
+          "description": "ISO 4217 currency code or crypto symbol (e.g., USD, USDC)."
+        },
+        "model": {
+          "type": "string",
+          "enum": ["fixed", "dynamic", "auction", "outcome_based"],
+          "description": "Pricing model."
+        },
+        "per": {
+          "type": "string",
+          "enum": ["request", "token", "second", "output_unit"],
+          "description": "Price unit."
+        },
+        "conditions": {
+          "type": "array",
+          "description": "Conditional pricing adjustments.",
+          "items": {
+            "$ref": "#/$defs/PricingCondition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sla": {
+      "type": "object",
+      "description": "Performance guarantees declared before execution.",
+      "required": ["max_latency_ms"],
+      "properties": {
+        "max_latency_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum acceptable latency in milliseconds."
+        },
+        "min_quality_score_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Minimum quality threshold in basis points (0-10000)."
+        },
+        "availability_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Required availability in basis points (0-10000)."
+        },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum acceptable retries."
+        }
+      },
+      "additionalProperties": false
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this offer/counter expires. Must be in the future at creation time."
+    },
+    "previous_state_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA-256 hash of the previous message in this negotiation chain. Absent for initial OFFER."
+    },
+    "parent_negotiation_id": {
+      "type": "string",
+      "pattern": "^neg_[a-f0-9]{8}$",
+      "description": "For renegotiation: references the original negotiation."
+    },
+    "identity_snapshot": {
+      "type": "object",
+      "description": "Snapshot of counterparty's AgentIdentity at offer time for audit.",
+      "required": ["agent_id", "snapshot_at"],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "description": "Counterparty's agent_id at time of offer."
+        },
+        "reputation_snapshot": {
+          "type": "object",
+          "description": "Counterparty's reputation at time of offer."
+        },
+        "capabilities_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of counterparty's capabilities at time of offer."
+        },
+        "snapshot_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When snapshot was taken."
+        }
+      },
+      "additionalProperties": false
+    },
+    "xap_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+",
+      "description": "Protocol version (semver)."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this message was created."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Ed25519 signature of the entire object by from_agent."
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "not": {
+      "properties": {
+        "state": { "const": "OFFER" }
+      },
+      "required": ["state"]
+    }
+  },
+  "then": {
+    "required": ["previous_state_hash"]
+  },
+  "$defs": {
+    "IOSpec": {
+      "type": "object",
+      "description": "Input or output format specification.",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["plaintext", "json", "markdown", "binary", "image", "audio", "custom"],
+          "description": "Data format."
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum token count."
+        },
+        "schema_ref": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to a JSON schema for structured input/output."
+        },
+        "content_type": {
+          "type": "string",
+          "description": "MIME type for binary/custom formats."
+        }
+      },
+      "additionalProperties": false
+    },
+    "PricingCondition": {
+      "type": "object",
+      "description": "Conditional pricing adjustment based on a metric.",
+      "required": ["metric", "operator", "threshold", "modifier_bps"],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "description": "What is measured (e.g., latency_ms, quality_score, token_count)."
+        },
+        "operator": {
+          "type": "string",
+          "enum": ["lte", "gte", "eq", "lt", "gt"],
+          "description": "Comparison operator."
+        },
+        "threshold": {
+          "type": "integer",
+          "description": "The threshold value."
+        },
+        "modifier_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Price modifier in basis points (10000 = full price, 5000 = 50%)."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
