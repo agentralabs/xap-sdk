@@ -1,8 +1,12 @@
 """Tests that the example demos run without error."""
 
+import pathlib
+
 import pytest
 import subprocess
 import sys
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 @pytest.mark.parametrize("script", [
@@ -17,6 +21,6 @@ def test_demo_runs(script):
         capture_output=True,
         text=True,
         timeout=30,
-        cwd="/Users/omoshola/Documents/agentra/xap-sdk",
+        cwd=str(REPO_ROOT),
     )
     assert result.returncode == 0, f"{script} failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
