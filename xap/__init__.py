@@ -29,6 +29,7 @@ from xap.crypto import (
     compute_replay_hash,
     XAPSigner,
 )
+from xap.client import XAPClient
 
 __all__ = [
     "__version__",
@@ -53,4 +54,5 @@ __all__ = [
     "canonical_hash",
     "compute_replay_hash",
     "XAPSigner",
+    "XAPClient",
 ]
