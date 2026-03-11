@@ -30,6 +30,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+langchain = ["langchain>=0.1"]
+crewai = ["crewai>=0.1"]
+all = ["langchain>=0.1", "crewai>=0.1"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.23",
