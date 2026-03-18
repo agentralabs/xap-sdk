@@ -37,6 +37,11 @@ class TestDiscoverAgentsV02:
         schema = tools["xap_discover_agents"].inputSchema
         assert "page_size" in schema["properties"]
 
+    def test_tool_schema_has_condition_type(self):
+        tools = {t.name: t for t in _tool_schemas()}
+        schema = tools["xap_discover_agents"].inputSchema
+        assert "condition_type" in schema["properties"]
+
     @pytest.mark.asyncio
     async def test_discover_with_include_manifest(self):
         base = get_base()
@@ -66,6 +71,35 @@ class TestDiscoverAgentsV02:
         data = json.loads(result[0].text)
         assert len(data["results"]) == 1
         assert "manifest" in data["results"][0]
+
+    @pytest.mark.asyncio
+    async def test_include_manifest_surfaces_receipt_hashes_available(self):
+        base = get_base()
+        provider = XAPClient.sandbox(balance=0)
+        provider.adapter = base.client.adapter
+        identity = provider.identity(
+            display_name="HashBot",
+            capabilities=[{
+                "name": "analysis", "version": "1.0.0",
+                "pricing": {"model": "fixed", "amount_minor_units": 500, "currency": "USD", "per": "request"},
+                "sla": {"max_latency_ms": 2000, "availability_bps": 9900},
+            }],
+        )
+        manifest = provider.manifest.build(
+            capabilities=[{
+                "name": "analysis", "version": "1.0.0",
+                "attestation": {"total_settlements": 10, "success_rate_bps": 9000, "window_days": 90,
+                                "receipt_hashes": [f"vrt_{'ab' * 32}", f"vrt_{'cd' * 32}"]},
+            }],
+            economic_terms={"accepted_currencies": ["USD"], "accepted_condition_types": ["deterministic"],
+                            "min_amount_minor": 100, "max_amount_minor": 50000},
+        )
+        base.client.discovery.register(identity, manifest=manifest)
+        result = await call_tool("xap_discover_agents", {
+            "capability": "analysis", "include_manifest": True,
+        })
+        data = json.loads(result[0].text)
+        assert data["results"][0]["receipt_hashes_available"] == 2
 
     @pytest.mark.asyncio
     async def test_legacy_min_reputation_still_works(self):

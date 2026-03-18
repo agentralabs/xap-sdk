@@ -44,9 +44,14 @@ def _tool_schemas() -> list[Tool]:
                         "type": "integer",
                         "description": "Maximum price in minor units (e.g., 1000 = $10.00 USD). No limit if omitted.",
                     },
+                    "condition_type": {
+                        "type": "string",
+                        "enum": ["deterministic", "probabilistic", "human_approval"],
+                        "description": "Filter by accepted condition type.",
+                    },
                     "include_manifest": {
                         "type": "boolean",
-                        "description": "Include full AgentManifest in results. Use before xap_verify_manifest. Default false.",
+                        "description": "Include full AgentManifest in results. Default false.",
                         "default": False,
                     },
                     "page_size": {
@@ -182,14 +187,10 @@ def _tool_schemas() -> list[Tool]:
 _contracts: dict[str, dict] = {}
 _verity_receipts: dict[str, dict] = {}
 
-
 def _store_contract(contract: dict) -> None:
-    """Store a contract for later retrieval by negotiation_id."""
     _contracts[contract["negotiation_id"]] = contract
 
-
 def _get_contract(contract_id: str) -> dict:
-    """Retrieve a stored contract by negotiation_id."""
     if contract_id not in _contracts:
         raise ValueError(f"Contract not found: {contract_id}")
     return _contracts[contract_id]
@@ -211,10 +212,16 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 capability=arguments["capability"],
                 min_success_rate_bps=arguments.get("min_success_rate_bps", 0),
                 max_price_minor=arguments.get("max_price_minor"),
+                condition_type=arguments.get("condition_type"),
                 include_manifest=include_mf,
                 page_size=arguments.get("page_size", 10),
                 min_reputation=arguments.get("min_reputation", 0),
             )
+            if include_mf and isinstance(result, dict):
+                for r in result.get("results", []):
+                    if m := r.get("manifest"):
+                        att = m.get("capabilities", [{}])[0].get("attestation", {})
+                        r["receipt_hashes_available"] = len(att.get("receipt_hashes", []))
             return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
 
         elif name == "xap_verify_manifest":
@@ -249,41 +256,31 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
         elif name == "xap_respond_to_offer":
             contract = _get_contract(arguments["contract_id"])
-            action = arguments["action"]
-            new_amount = arguments.get("counter_amount")
-            result = base.respond_to_offer(contract, action, new_amount=new_amount)
+            result = base.respond_to_offer(contract, arguments["action"], new_amount=arguments.get("counter_amount"))
             _store_contract(result)
-            return [TextContent(type="text", text=json.dumps({
-                "negotiation_id": result["negotiation_id"],
-                "state": result["state"],
-                "contract": result,
-            }, indent=2, default=str))]
+            return [TextContent(type="text", text=json.dumps(
+                {"negotiation_id": result["negotiation_id"], "state": result["state"], "contract": result},
+                indent=2, default=str))]
 
         elif name == "xap_settle":
             contract = _get_contract(arguments["contract_id"])
-            payee_shares = arguments.get("payee_shares")
-            result = await base.settle_async(contract, payee_shares=payee_shares)
+            result = await base.settle_async(contract, payee_shares=arguments.get("payee_shares"))
             if "verity_receipt" in result:
                 _verity_receipts[result["verity_id"]] = result["verity_receipt"]
             return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
 
         elif name == "xap_verify_receipt":
-            receipt_id = arguments["receipt_id"]
-            if receipt_id not in _verity_receipts:
-                return [TextContent(type="text", text=json.dumps({
-                    "error": f"Verity receipt not found: {receipt_id}",
-                }))]
-            valid = base.verify(_verity_receipts[receipt_id])
-            return [TextContent(type="text", text=json.dumps({"verified": valid}))]
+            rid = arguments["receipt_id"]
+            if rid not in _verity_receipts:
+                return [TextContent(type="text", text=json.dumps({"error": f"Verity receipt not found: {rid}"}))]
+            return [TextContent(type="text", text=json.dumps({"verified": base.verify(_verity_receipts[rid])}))]
 
         elif name == "xap_check_balance":
-            agent_id = arguments.get("agent_id") or None
-            balance = base.check_balance(agent_id)
-            return [TextContent(type="text", text=json.dumps({"balance": balance}))]
+            return [TextContent(type="text", text=json.dumps(
+                {"balance": base.check_balance(arguments.get("agent_id"))}))]
 
         else:
             return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
-
     except Exception as e:
         return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
 
