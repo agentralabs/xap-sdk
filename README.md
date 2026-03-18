@@ -2,12 +2,12 @@
 
 **Settlement objects for autonomous agent commerce.**
 
-[![CI](https://github.com/agentralabs/xap-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/agentralabs/xap-sdk/actions)
+[![CI](https://github.com/agentra-commerce/xap-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/agentra-commerce/xap-sdk/actions)
 [![PyPI](https://img.shields.io/pypi/v/xap-sdk)](https://pypi.org/project/xap-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/xap-sdk)](https://pypi.org/project/xap-sdk/)
 [![Tests: 262 passing](https://img.shields.io/badge/Tests-262%20passing-brightgreen.svg)](#)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18944370.svg)](https://doi.org/10.5281/zenodo.18944370)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/agentralabs/xap-sdk/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/agentra-commerce/xap-sdk/blob/main/LICENSE)
 [![Patent Pending](https://img.shields.io/badge/Patent-Pending-blue.svg)](#)
 
 XAP is the only protocol combining schema validation, cryptographic signatures, enforced state machines, idempotency, governed receipts, and replayable reasoning into one governed object model.
@@ -268,8 +268,8 @@ This exposes XAP's full capability — discovery, negotiation, settlement, recei
 
 ## Links
 
-- [XAP Protocol Specification](https://github.com/agentralabs/xap-protocol)
-- [Verity Truth Engine](https://github.com/agentralabs/verity-engine)
+- [XAP Protocol Specification](https://github.com/agentra-commerce/xap-protocol)
+- [Verity Truth Engine](https://github.com/agentra-commerce/verity-engine)
 - [Agentra Rail — Production Infrastructure](https://www.agentralabs.tech)
 - [Discord Community](https://discord.gg/agentralabs)
 
@@ -283,7 +283,7 @@ This exposes XAP's full capability — discovery, negotiation, settlement, recei
   author = {Agentra Labs},
   year   = {2026},
   doi    = {10.5281/zenodo.18944370},
-  url    = {https://github.com/agentralabs/xap-sdk}
+  url    = {https://github.com/agentra-commerce/xap-sdk}
 }
 ```
 

@@ -44,11 +44,11 @@ dev = [
 xap-mcp = "xap.mcp.server:main_cli"
 
 [project.urls]
-Homepage = "https://github.com/agentralabs/xap-sdk"
-Documentation = "https://github.com/agentralabs/xap-sdk#quickstart"
-Repository = "https://github.com/agentralabs/xap-sdk"
-Issues = "https://github.com/agentralabs/xap-sdk/issues"
-Protocol = "https://github.com/agentralabs/xap-protocol"
+Homepage = "https://github.com/agentra-commerce/xap-sdk"
+Documentation = "https://github.com/agentra-commerce/xap-sdk#quickstart"
+Repository = "https://github.com/agentra-commerce/xap-sdk"
+Issues = "https://github.com/agentra-commerce/xap-sdk/issues"
+Protocol = "https://github.com/agentra-commerce/xap-protocol"
 
 [tool.setuptools.packages.find]
 include = ["xap*"]

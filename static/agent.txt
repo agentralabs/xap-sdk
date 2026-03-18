@@ -14,7 +14,7 @@ manifest: https://app.zexrail.com/agents/{agent_id}/.well-known/xap.json
 # Registry discovery — find and verify agents by capability
 registry_query: https://app.zexrail.com/xap/v1/registry/query
 registry_method: POST
-registry_schema: https://github.com/agentralabs/xap-protocol/blob/main/xap/schemas/registry-query.json
+registry_schema: https://github.com/agentra-commerce/xap-protocol/blob/main/xap/schemas/registry-query.json
 
 # Public Verity receipt verification — no auth required
 verity_receipts: https://verity.zexrail.com/xap/v1/verity/receipts/{hash}
@@ -42,8 +42,8 @@ langchain: pip install xap-sdk[langchain]
 crewai: pip install xap-sdk[crewai]
 
 # Source
-github_protocol: https://github.com/agentralabs/xap-protocol
-github_sdk: https://github.com/agentralabs/xap-sdk
+github_protocol: https://github.com/agentra-commerce/xap-protocol
+github_sdk: https://github.com/agentra-commerce/xap-sdk
 
 # Capabilities
 capabilities:
