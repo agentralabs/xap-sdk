@@ -11,6 +11,10 @@ from xap.schemas.loader import load_schema
 class SchemaValidator:
     """Validate XAP objects against their JSON schemas."""
 
+    def validate_agent_manifest(self, obj: dict) -> None:
+        """Validate an AgentManifest object."""
+        self.validate("agent-manifest", obj)
+
     def validate_agent_identity(self, obj: dict) -> None:
         """Validate an AgentIdentity object."""
         self.validate("agent-identity", obj)

@@ -28,8 +28,11 @@ from xap.crypto import (
     canonical_hash,
     compute_replay_hash,
     XAPSigner,
+    generate_keypair,
 )
 from xap.client import XAPClient
+from xap.manifest import AgentManifest
+from xap.verify import verify_manifest
 
 __all__ = [
     "__version__",
@@ -54,5 +57,8 @@ __all__ = [
     "canonical_hash",
     "compute_replay_hash",
     "XAPSigner",
+    "generate_keypair",
     "XAPClient",
+    "AgentManifest",
+    "verify_manifest",
 ]

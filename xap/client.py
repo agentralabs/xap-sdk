@@ -11,6 +11,7 @@ from xap.clients.negotiation import NegotiationClient
 from xap.clients.settlement import SettlementClient
 from xap.clients.receipt import ReceiptClient
 from xap.clients.discovery import DiscoveryClient
+from xap.manifest import AgentManifest
 
 
 class XAPClient:
@@ -37,6 +38,11 @@ class XAPClient:
         self.settlement = SettlementClient(self)
         self.receipts = ReceiptClient(self)
         self.discovery = DiscoveryClient(self)
+
+    @property
+    def manifest(self) -> AgentManifestAccessor:
+        """Access the AgentManifest builder and verifier."""
+        return AgentManifestAccessor(self)
 
     @classmethod
     def sandbox(
@@ -75,3 +81,35 @@ class XAPClient:
             )
 
         return builder.build()
+
+
+class AgentManifestAccessor:
+    """Provides manifest operations through XAPClient.manifest."""
+
+    def __init__(self, client: XAPClient) -> None:
+        self._client = client
+
+    def build(
+        self,
+        capabilities: list[dict],
+        economic_terms: dict,
+        **kwargs,
+    ) -> dict:
+        """Build and sign an AgentManifest for this client's agent."""
+        return AgentManifest.build(
+            agent_id=str(self._client.agent_id),
+            signer=self._client.signer,
+            capabilities=capabilities,
+            economic_terms=economic_terms,
+            **kwargs,
+        )
+
+    @staticmethod
+    def verify(manifest: dict) -> bool:
+        """Verify an AgentManifest signature."""
+        return AgentManifest.verify(manifest)
+
+    @staticmethod
+    def is_expired(manifest: dict) -> bool:
+        """Check if a manifest has expired."""
+        return AgentManifest.is_expired(manifest)

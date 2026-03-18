@@ -12,7 +12,7 @@ from xap.types import AgentId
 class TestSchemaLoader:
     def test_load_all_schemas(self):
         schemas = load_all_schemas()
-        assert len(schemas) == 7
+        assert len(schemas) == 8
 
     @pytest.mark.parametrize("name", SCHEMA_NAMES)
     def test_load_each_schema(self, name):

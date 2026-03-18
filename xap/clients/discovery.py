@@ -21,10 +21,13 @@ class DiscoveryClient:
     def __init__(self, xap_client: XAPClient) -> None:
         self._client = xap_client
         self._registry: dict[str, dict] = {}  # agent_id -> identity
+        self._manifests: dict[str, dict] = {}  # agent_id -> manifest
 
-    def register(self, identity: dict) -> None:
-        """Register an agent identity in the sandbox registry."""
+    def register(self, identity: dict, manifest: dict | None = None) -> None:
+        """Register an agent identity (and optional manifest) in the sandbox registry."""
         self._registry[identity["agent_id"]] = identity
+        if manifest:
+            self._manifests[identity["agent_id"]] = manifest
 
     def search(
         self,
@@ -33,10 +36,12 @@ class DiscoveryClient:
         max_price_minor_units: int | None = None,
         max_latency_ms: int | None = None,
         limit: int = 20,
+        include_manifest: bool = False,
     ) -> dict:
         """Search for agents matching criteria.
 
         Returns a RegistryResponse with ranked results.
+        When include_manifest is True, each result includes the agent's manifest.
         """
         # Build query for validation
         query_builder = RegistryQueryBuilder(self._client.agent_id)
@@ -53,19 +58,30 @@ class DiscoveryClient:
 
         # Filter in-memory registry
         matches = []
+        manifest_map: dict[int, dict] = {}  # index -> manifest
         for agent_id, identity in self._registry.items():
             if self._matches_filters(identity, capability, min_reputation_bps, max_price_minor_units, max_latency_ms):
-                matches.append(self._to_summary(identity))
+                summary = self._to_summary(identity)
+                if include_manifest and agent_id in self._manifests:
+                    manifest_map[len(matches)] = self._manifests[agent_id]
+                matches.append(summary)
 
         matches = matches[:limit]
 
-        # Build response
+        # Build response (validates against schema without manifest)
         resp_builder = RegistryResponseBuilder(query["query_id"])
         resp_builder.limit(limit)
         for m in matches:
             resp_builder.add_result(m)
 
-        return resp_builder.build()
+        response = resp_builder.build()
+
+        # Attach manifests after validation
+        for idx, manifest in manifest_map.items():
+            if idx < len(response["results"]):
+                response["results"][idx]["manifest"] = manifest
+
+        return response
 
     def _matches_filters(
         self,

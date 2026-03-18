@@ -35,6 +35,15 @@ def compute_replay_hash(input_state: dict, rules_applied: dict, computation: dic
     return f"sha256:{hashlib.sha256(combined).hexdigest()}"
 
 
+def generate_keypair() -> tuple[XAPSigner, str]:
+    """Generate a new Ed25519 keypair.
+
+    Returns (signer, public_key_base64).
+    """
+    signer = XAPSigner.generate()
+    return signer, signer.public_key_base64()
+
+
 class XAPSigner:
     """Ed25519 signing for XAP objects."""
 

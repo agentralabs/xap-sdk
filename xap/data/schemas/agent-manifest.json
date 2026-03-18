@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xap.agentralabs.tech/schemas/v0.2/agent-manifest.json",
+  "title": "AgentManifest",
+  "description": "XAP v0.2 — Pre-negotiation trust credential. Signed, Verity-backed. The sixth XAP primitive.",
+  "type": "object",
+  "required": [
+    "manifest_id", "agent_id", "xap_version",
+    "issued_at", "expires_at", "signature",
+    "capabilities", "economic_terms"
+  ],
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "pattern": "^mnf_[0-9a-f]{8}$",
+      "description": "Unique manifest identifier."
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^(agent_)?[a-f0-9]{8,64}$",
+      "description": "Agent identifier."
+    },
+    "xap_version": {
+      "type": "string",
+      "const": "0.2",
+      "description": "XAP protocol version."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "registry_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "public_key", "value", "signed_fields"],
+      "properties": {
+        "algorithm": { "type": "string", "const": "Ed25519" },
+        "public_key": { "type": "string" },
+        "value": { "type": "string" },
+        "signed_fields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "attestation"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "attestation": {
+            "type": "object",
+            "required": ["total_settlements", "success_rate_bps", "window_days", "receipt_hashes"],
+            "properties": {
+              "total_settlements": { "type": "integer", "minimum": 0 },
+              "success_rate_bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+              "dispute_rate_bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+              "avg_latency_ms": { "type": "integer", "minimum": 0 },
+              "window_days": { "type": "integer", "minimum": 1 },
+              "receipt_hashes": {
+                "type": "array",
+                "maxItems": 10,
+                "items": { "type": "string", "pattern": "^vrt_[0-9a-f]{64}$" }
+              },
+              "verification_endpoint": { "type": "string", "format": "uri" }
+            }
+          },
+          "sla": {
+            "type": "object",
+            "properties": {
+              "max_latency_ms": { "type": "integer", "minimum": 0 },
+              "availability_bps": { "type": "integer", "minimum": 0, "maximum": 10000 }
+            }
+          }
+        }
+      }
+    },
+    "economic_terms": {
+      "type": "object",
+      "required": ["accepted_currencies", "accepted_condition_types", "min_amount_minor", "max_amount_minor"],
+      "properties": {
+        "accepted_currencies": { "type": "array", "items": { "type": "string" } },
+        "accepted_condition_types": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["deterministic", "probabilistic", "human_approval"] }
+        },
+        "accepted_adapters": { "type": "array", "items": { "type": "string" } },
+        "min_amount_minor": { "type": "integer", "minimum": 1 },
+        "max_amount_minor": { "type": "integer", "minimum": 1 },
+        "chargeback_policy": { "type": "string", "enum": ["PROPORTIONAL", "FIRST_SETTLED", "LAST_SETTLED", "OPERATOR_DEFINED"] },
+        "min_negotiation_rounds": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "max_concurrent": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "federation_hints": {
+      "type": "object",
+      "properties": {
+        "also_registered_at": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "identity_portable_proof": { "type": "string" }
+      }
+    }
+  }
+}

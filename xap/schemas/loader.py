@@ -9,6 +9,7 @@ from functools import lru_cache
 _SCHEMA_DIR = Path(__file__).parent.parent / "data" / "schemas"
 
 SCHEMA_NAMES = [
+    "agent-manifest",
     "agent-identity",
     "negotiation-contract",
     "settlement-intent",
