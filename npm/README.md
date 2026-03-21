@@ -1,4 +1,4 @@
-# @agentra/xap-mcp
+# @agenticamem/xap-mcp
 
 **XAP settlement tools for Claude, Cursor, and any MCP client.**
 
@@ -15,7 +15,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "xap": {
       "command": "npx",
-      "args": ["-y", "@agentra/xap-mcp"]
+      "args": ["-y", "@agenticamem/xap-mcp"]
     }
   }
 }
@@ -32,7 +32,7 @@ Same config pattern — add to your MCP settings file:
   "mcpServers": {
     "xap": {
       "command": "npx",
-      "args": ["-y", "@agentra/xap-mcp"]
+      "args": ["-y", "@agenticamem/xap-mcp"]
     }
   }
 }
@@ -70,7 +70,7 @@ No account needed to try it. Sandbox uses fake money with no real effects:
   "mcpServers": {
     "xap": {
       "command": "npx",
-      "args": ["-y", "@agentra/xap-mcp"],
+      "args": ["-y", "@agenticamem/xap-mcp"],
       "env": {
         "XAP_MODE": "sandbox"
       }
@@ -89,7 +89,7 @@ API key, and add it to the env:
   "mcpServers": {
     "xap": {
       "command": "npx",
-      "args": ["-y", "@agentra/xap-mcp"],
+      "args": ["-y", "@agenticamem/xap-mcp"],
       "env": {
         "XAP_MODE": "live",
         "XAP_API_KEY": "your_api_key_here"

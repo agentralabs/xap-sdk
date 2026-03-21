@@ -232,7 +232,7 @@ Connect XAP to Claude, Cursor, Windsurf, or any MCP-compatible AI:
   "mcpServers": {
     "xap": {
       "command": "npx",
-      "args": ["-y", "@agentra/xap-mcp"]
+      "args": ["-y", "@agenticamem/xap-mcp"]
     }
   }
 }

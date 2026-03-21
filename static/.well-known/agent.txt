@@ -16,7 +16,7 @@ license: MIT (protocol) | Commercial (infrastructure)
 # No account required for sandbox. ZexRail account required for live.
 
 mcp_server: https://mcp.zexrail.com/sse
-mcp_install_npm: npx -y @agentra/xap-mcp
+mcp_install_npm: npx -y @agenticamem/xap-mcp
 mcp_install_python: pip install xap-sdk[mcp]
 mcp_setup: python -m xap.mcp.setup
 mcp_docs: https://zexrail.com/docs/mcp
