@@ -24,3 +24,7 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Secrets / tokens
+.mcpregistry_github_token
+*_github_token
